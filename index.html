@@ -1,1 +1,400 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interferenspasning – Lamés ligninger</title>
+<style>
+body{
+  font-family: Arial, sans-serif;
+  margin:0;
+  background:#f3f6fa;
+  color:#111;
+}
+header{
+  background:#003b73;
+  color:white;
+  padding:18px;
+  text-align:center;
+}
+main{
+  max-width:1100px;
+  margin:auto;
+  padding:18px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+.card{
+  background:white;
+  padding:16px;
+  border-radius:12px;
+  box-shadow:0 2px 8px #0002;
+}
+label{
+  display:block;
+  margin-top:10px;
+  font-weight:bold;
+}
+select,input{
+  width:100%;
+  padding:9px;
+  margin-top:4px;
+  font-size:16px;
+}
+.result{
+  font-size:28px;
+  font-weight:bold;
+  color:#003b73;
+}
+.small{
+  font-size:14px;
+  color:#444;
+}
+svg{
+  width:100%;
+  background:#fff;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+td,th{
+  border-bottom:1px solid #ddd;
+  padding:7px;
+  text-align:left;
+}
+.warn{
+  background:#fff3cd;
+  padding:10px;
+  border-radius:8px;
+  margin-top:10px;
+}
+@media(max-width:800px){
+  .grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
 
+<body>
+<header>
+<h1>Interferenspasning – kontakttrykk med Lamés ligninger</h1>
+<p>Boss/nav + aksling med valgt toleranse, materiale og geometri</p>
+</header>
+
+<main>
+
+<div class="grid">
+
+<div class="card">
+<h2>1. Boss / nav</h2>
+
+<label>Hulldiameter, nominell diameter d</label>
+<select id="d">
+  <option value="20">Ø20 mm</option>
+  <option value="25">Ø25 mm</option>
+  <option value="30">Ø30 mm</option>
+  <option value="35">Ø35 mm</option>
+  <option value="40" selected>Ø40 mm</option>
+  <option value="50">Ø50 mm</option>
+  <option value="60">Ø60 mm</option>
+  <option value="80">Ø80 mm</option>
+  <option value="100">Ø100 mm</option>
+</select>
+
+<label>Toleranse hull</label>
+<select id="holeTol">
+  <option value="H6">H6</option>
+  <option value="H7" selected>H7</option>
+  <option value="H8">H8</option>
+</select>
+
+<label>Ytterdiameter boss/nav</label>
+<select id="Do">
+  <option value="60">Ø60 mm</option>
+  <option value="70">Ø70 mm</option>
+  <option value="80">Ø80 mm</option>
+  <option value="90">Ø90 mm</option>
+  <option value="100" selected>Ø100 mm</option>
+  <option value="120">Ø120 mm</option>
+  <option value="150">Ø150 mm</option>
+</select>
+
+<label>Material boss/nav</label>
+<select id="matBoss"></select>
+</div>
+
+<div class="card">
+<h2>2. Aksling</h2>
+
+<label>Toleranse aksling</label>
+<select id="shaftTol">
+  <option value="h6">h6</option>
+  <option value="k6">k6</option>
+  <option value="m6">m6</option>
+  <option value="n6">n6</option>
+  <option value="p6" selected>p6</option>
+  <option value="s6">s6</option>
+</select>
+
+<label>Innerdiameter aksling</label>
+<select id="Di">
+  <option value="0" selected>Ø0 mm – massiv aksling</option>
+  <option value="10">Ø10 mm</option>
+  <option value="15">Ø15 mm</option>
+  <option value="20">Ø20 mm</option>
+  <option value="25">Ø25 mm</option>
+  <option value="30">Ø30 mm</option>
+</select>
+
+<label>Inngrepslengde L</label>
+<select id="L">
+  <option value="20">20 mm</option>
+  <option value="30">30 mm</option>
+  <option value="40">40 mm</option>
+  <option value="50" selected>50 mm</option>
+  <option value="60">60 mm</option>
+  <option value="80">80 mm</option>
+  <option value="100">100 mm</option>
+</select>
+
+<label>Material aksling</label>
+<select id="matShaft"></select>
+</div>
+
+</div>
+
+<div class="card">
+<h2>Resultat</h2>
+
+<p>Kontakttrykk, minimum / maksimum:</p>
+<div class="result" id="pressure">–</div>
+
+<table>
+<tr><th>Størrelse</th><th>Verdi</th></tr>
+<tr><td>Min. diametrisk interferens</td><td id="imin">–</td></tr>
+<tr><td>Maks. diametrisk interferens</td><td id="imax">–</td></tr>
+<tr><td>Radial interferens brukt i beregning</td><td id="radial">–</td></tr>
+<tr><td>Friksjonskoeffisient μ</td><td id="mu">–</td></tr>
+<tr><td>Omtrentlig overførbart dreiemoment</td><td id="torque">–</td></tr>
+</table>
+
+<div class="warn">
+Beregningen bruker forenklet elastisk modell basert på Lamés ligninger.  
+Kontroller alltid mot aktuell standard, overflateruhet, temperatur, sikkerhetsfaktor og materialflyt.
+</div>
+</div>
+
+<div class="card">
+<h2>Visuell fremstilling</h2>
+<svg id="svg" viewBox="0 0 900 420"></svg>
+</div>
+
+<div class="card">
+<h2>Benyttet beregningsmodell</h2>
+<p>
+Diametrisk interferens gjøres om til radial interferens:
+</p>
+<p><b>δ = Δd / 2</b></p>
+
+<p>
+Kontakttrykket finnes fra elastisk utvidelse av boss og elastisk sammentrykking av aksling:
+</p>
+
+<p>
+<b>
+p = δ / { r · [ C<sub>boss</sub> + C<sub>aksling</sub> ] }
+</b>
+</p>
+
+<p>
+Der:
+</p>
+
+<p>
+C<sub>boss</sub> =
+(1 − ν²) / E · (b² + r²) / (b² − r²)
+</p>
+
+<p>
+C<sub>aksling</sub> =
+(1 − ν²) / E · (r² + c²) / (r² − c²)
+</p>
+
+<p class="small">
+r = kontakt-radius, b = ytre radius boss, c = indre radius hul aksling.
+For massiv aksling er c = 0.
+</p>
+</div>
+
+</main>
+
+<script>
+const materials = {
+  "Stål":      {E:210000, nu:0.30, mu:0.12},
+  "Aluminium": {E:70000,  nu:0.33, mu:0.18},
+  "Kobber":   {E:120000, nu:0.34, mu:0.20},
+  "Messing":  {E:100000, nu:0.34, mu:0.19}
+};
+
+const holeTol = {
+  "H6": {lower:0, upper:16},
+  "H7": {lower:0, upper:25},
+  "H8": {lower:0, upper:39}
+};
+
+// Omtrentlige ISO-avvik for diameterområde ca. 30–50 mm, i µm
+const shaftTol = {
+  "h6": {lower:-16, upper:0},
+  "k6": {lower:2, upper:18},
+  "m6": {lower:9, upper:25},
+  "n6": {lower:17, upper:33},
+  "p6": {lower:26, upper:42},
+  "s6": {lower:43, upper:59}
+};
+
+const matBoss = document.getElementById("matBoss");
+const matShaft = document.getElementById("matShaft");
+
+for(let m in materials){
+  matBoss.innerHTML += `<option>${m}</option>`;
+  matShaft.innerHTML += `<option>${m}</option>`;
+}
+matBoss.value = "Stål";
+matShaft.value = "Stål";
+
+document.querySelectorAll("select,input").forEach(el=>{
+  el.addEventListener("change", calc);
+});
+
+function calc(){
+  const d = Number(document.getElementById("d").value);
+  const Do = Number(document.getElementById("Do").value);
+  const Di = Number(document.getElementById("Di").value);
+  const L = Number(document.getElementById("L").value);
+
+  const hTol = holeTol[document.getElementById("holeTol").value];
+  const sTol = shaftTol[document.getElementById("shaftTol").value];
+
+  const mb = materials[matBoss.value];
+  const ms = materials[matShaft.value];
+
+  const holeMin = d + hTol.lower/1000;
+  const holeMax = d + hTol.upper/1000;
+
+  const shaftMin = d + sTol.lower/1000;
+  const shaftMax = d + sTol.upper/1000;
+
+  const iMin = shaftMin - holeMax;
+  const iMax = shaftMax - holeMin;
+
+  const r = d/2;
+  const b = Do/2;
+  const c = Di/2;
+
+  let pMin = 0;
+  let pMax = 0;
+
+  if(iMax > 0 && Do > d && Di < d){
+    const Cboss = ((1 - mb.nu**2) / mb.E) * ((b*b + r*r) / (b*b - r*r));
+    const Cshaft = ((1 - ms.nu**2) / ms.E) * ((r*r + c*c) / (r*r - c*c));
+
+    pMin = Math.max(0, (iMin/2) / (r * (Cboss + Cshaft)));
+    pMax = Math.max(0, (iMax/2) / (r * (Cboss + Cshaft)));
+  }
+
+  const mu = Math.min(mb.mu, ms.mu);
+  const torqueMax = mu * pMax * Math.PI * d * L * (d/2) / 1000; 
+  // MPa=N/mm², moment blir Nmm, delt på 1000 = Nm
+
+  document.getElementById("pressure").innerHTML =
+    `${pMin.toFixed(1)} – ${pMax.toFixed(1)} MPa`;
+
+  document.getElementById("imin").innerHTML =
+    `${(iMin*1000).toFixed(1)} µm`;
+
+  document.getElementById("imax").innerHTML =
+    `${(iMax*1000).toFixed(1)} µm`;
+
+  document.getElementById("radial").innerHTML =
+    `${(Math.max(iMax,0)*1000/2).toFixed(1)} µm maks`;
+
+  document.getElementById("mu").innerHTML =
+    `${mu.toFixed(2)}`;
+
+  document.getElementById("torque").innerHTML =
+    `${torqueMax.toFixed(0)} Nm`;
+
+  drawSVG(d, Do, Di, L, holeMin, holeMax, shaftMin, shaftMax, iMin, iMax);
+}
+
+function drawSVG(d, Do, Di, L, holeMin, holeMax, shaftMin, shaftMax, iMin, iMax){
+  const svg = document.getElementById("svg");
+
+  const cx = 230;
+  const cy = 190;
+  const scale = 2.3;
+
+  const rHole = d/2 * scale;
+  const rOuter = Do/2 * scale;
+  const rInner = Di/2 * scale;
+
+  const status = iMax <= 0 ? "Ingen sikker interferens" :
+                 iMin < 0 ? "Delvis overgangspasning" :
+                 "Ren interferenspasning";
+
+  svg.innerHTML = `
+  <text x="30" y="35" font-size="22" font-weight="bold">Snitt gjennom boss og aksling</text>
+
+  <circle cx="${cx}" cy="${cy}" r="${rOuter}" fill="#d9ecff" stroke="#003b73" stroke-width="3"/>
+  <circle cx="${cx}" cy="${cy}" r="${rHole}" fill="#f4f4f4" stroke="#003b73" stroke-width="3"/>
+  <circle cx="${cx}" cy="${cy}" r="${rHole*0.95}" fill="#c9c9c9" stroke="#555" stroke-width="2"/>
+  <circle cx="${cx}" cy="${cy}" r="${rInner}" fill="white" stroke="#555" stroke-width="2"/>
+
+  <text x="${cx-55}" y="${cy+5}" font-size="16">Aksling</text>
+  <text x="${cx-65}" y="${cy-rOuter-12}" font-size="16">Boss / nav</text>
+
+  <line x1="${cx-rOuter}" y1="${cy+rOuter+25}" x2="${cx+rOuter}" y2="${cy+rOuter+25}" stroke="#111" stroke-width="2"/>
+  <text x="${cx-45}" y="${cy+rOuter+50}" font-size="16">Ytterdiameter boss</text>
+
+  <line x1="${cx-rHole}" y1="${cy-rHole-25}" x2="${cx+rHole}" y2="${cy-rHole-25}" stroke="#c00000" stroke-width="3"/>
+  <text x="${cx-60}" y="${cy-rHole-35}" font-size="16" fill="#c00000">Kontaktflate Ø${d}</text>
+
+  <text x="520" y="35" font-size="22" font-weight="bold">Toleransefelt</text>
+
+  <line x1="560" y1="250" x2="820" y2="250" stroke="#111" stroke-width="2"/>
+  <text x="665" y="275" font-size="15">Nominell Ø${d}</text>
+
+  <rect x="610" y="${180 - (holeMax-d)*3500}" 
+        width="70" 
+        height="${Math.max((holeMax-holeMin)*3500,8)}" 
+        fill="#9fd3ff" stroke="#003b73"/>
+
+  <rect x="705" y="${180 - (shaftMax-d)*3500}" 
+        width="70" 
+        height="${Math.max((shaftMax-shaftMin)*3500,8)}" 
+        fill="#ffb3b3" stroke="#900"/>
+
+  <text x="610" y="210" font-size="15">Hull</text>
+  <text x="705" y="210" font-size="15">Aksling</text>
+
+  <text x="520" y="310" font-size="18" font-weight="bold">${status}</text>
+  <text x="520" y="340" font-size="16">Min. interferens: ${(iMin*1000).toFixed(1)} µm</text>
+  <text x="520" y="365" font-size="16">Maks. interferens: ${(iMax*1000).toFixed(1)} µm</text>
+
+  <text x="30" y="390" font-size="14">
+  Blått felt = hulltoleranse. Rødt felt = akslingstoleranse. Når akslingfeltet ligger over hullfeltet får vi presspasning.
+  </text>
+  `;
+}
+
+calc();
+</script>
+
+</body>
+</html>
